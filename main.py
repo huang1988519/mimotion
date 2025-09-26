@@ -118,22 +118,48 @@ class MiMotionRunner:
 
     # 登录
     def login(self):
-
+        import uuid
+        
         url1 = "https://api-user.huami.com/registrations/" + self.user + "/tokens"
         login_headers = {
-            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2",
+            "accept": "application/json, text/plain, */*",
+            "accept-language": "zh",
+            "app_name": "com.huami.webapp",
+            "cache-control": "no-cache",
+            "content-type": "application/x-www-form-urlencoded",
+            "lang": "zh",
+            "origin": "https://user.huami.com",
+            "pragma": "no-cache",
+            "priority": "u=1, i",
+            "referer": "https://user.huami.com/",
+            "sec-ch-ua": '"Chromium";v="140", "Not=A?Brand";v="24", "Google Chrome";v="140"',
+            "sec-ch-ua-mobile": "?1",
+            "sec-ch-ua-platform": '"Android"',
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "same-site",
+            "user-agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+            "x-request-id": str(uuid.uuid4()),
             "X-Forwarded-For": self.fake_ip_addr
         }
         data1 = {
             "client_id": "HuaMi",
+            "country_code": "CN",
+            "json_response": "true",
+            "name": self.user,
             "password": f"{self.password}",
             "redirect_uri": "https://s3-us-west-2.amazonaws.com/hm-registration/successsignin.html",
+            "state": "REDIRECTION",
             "token": "access"
         }
+        # 添加随机延迟避免请求过于频繁
+        time.sleep(random.uniform(1, 3))
+        
         r1 = requests.post(url1, data=data1, headers=login_headers, allow_redirects=False)
         if r1.status_code != 303:
             self.log_str += "登录异常，status: %d\n" % r1.status_code
+            if r1.status_code == 429:
+                self.log_str += "请求过于频繁，建议增加账号间隔时间\n"
             return 0, 0
         location = r1.headers["Location"]
         try:
@@ -328,7 +354,7 @@ if __name__ == "__main__":
         PUSH_PLUS_MAX = get_int_value_default(config, 'PUSH_PLUS_MAX', 30)
         sleep_seconds = config.get('SLEEP_GAP')
         if sleep_seconds is None or sleep_seconds == '':
-            sleep_seconds = 5
+            sleep_seconds = 10  # 增加默认间隔时间到10秒
         sleep_seconds = float(sleep_seconds)
         users = config.get('USER')
         passwords = config.get('PWD')
