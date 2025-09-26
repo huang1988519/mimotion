@@ -156,19 +156,40 @@ class MiMotionRunner:
         time.sleep(random.uniform(1, 3))
         
         r1 = requests.post(url1, data=data1, headers=login_headers, allow_redirects=False)
-        if r1.status_code != 303:
+        
+        # 处理不同的响应状态码
+        if r1.status_code == 303:
+            # 重定向情况，从Location头获取code
+            location = r1.headers["Location"]
+            try:
+                code = get_access_token(location)
+                if code is None:
+                    self.log_str += "获取accessToken失败\n"
+                    return 0, 0
+            except:
+                self.log_str += f"获取accessToken异常:{traceback.format_exc()}\n"
+                return 0, 0
+        elif r1.status_code == 200:
+            # 直接返回JSON响应的情况
+            try:
+                response_json = r1.json()
+                # 检查响应中是否包含access_token或code
+                if 'access_token' in response_json:
+                    code = response_json['access_token']
+                elif 'code' in response_json:
+                    code = response_json['code']
+                elif 'token' in response_json:
+                    code = response_json['token']
+                else:
+                    self.log_str += f"响应中未找到有效的token，响应内容: {response_json}\n"
+                    return 0, 0
+            except:
+                self.log_str += f"解析JSON响应异常:{traceback.format_exc()}\n"
+                return 0, 0
+        else:
             self.log_str += "登录异常，status: %d\n" % r1.status_code
             if r1.status_code == 429:
                 self.log_str += "请求过于频繁，建议增加账号间隔时间\n"
-            return 0, 0
-        location = r1.headers["Location"]
-        try:
-            code = get_access_token(location)
-            if code is None:
-                self.log_str += "获取accessToken失败\n"
-                return 0, 0
-        except:
-            self.log_str += f"获取accessToken异常:{traceback.format_exc()}\n"
             return 0, 0
         # print("access_code获取成功！")
         # print(code)
