@@ -243,8 +243,15 @@ class MiMotionRunner:
 
     # 获取app_token
     def get_app_token(self, login_token):
-        url = f"https://account-cn.huami.com/v1/client/app_tokens?app_name=com.xiaomi.hm.health&dn=api-user.huami.com%2Capi-mifit.huami.com%2Capp-analytics.huami.com&login_token={login_token}"
-        headers = {'User-Agent': 'MiFit/5.3.0 (iPhone; iOS 14.7.1; Scale/3.00)', 'X-Forwarded-For': self.fake_ip_addr}
+        url = f"https://account-cn.huami.com/v1/client/app_tokens?app_name=com.huami.webapp&dn=account.huami.com%2Capi-user.huami.com%2Cauth.huami.com%2Capi-mifit.huami.com%2Capi-open.huami.com&login_token={login_token}"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36',
+            'X-Forwarded-For': self.fake_ip_addr,
+            'accept': 'application/json, text/plain, */*',
+            'accept-language': 'zh-CN,zh;q=0.9',
+            'cache-control': 'no-cache',
+            'pragma': 'no-cache'
+        }
         response = requests.get(url, headers=headers).json()
         app_token = response['token_info']['app_token']
         # print("app_token获取成功！")
@@ -278,10 +285,15 @@ class MiMotionRunner:
         head = {
             "apptoken": app_token,
             "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+            "accept": "application/json, text/plain, */*",
+            "accept-language": "zh-CN,zh;q=0.9",
+            "cache-control": "no-cache",
+            "pragma": "no-cache",
             "X-Forwarded-For": self.fake_ip_addr
         }
 
-        data = f'userid={userid}&last_sync_data_time=1597306380&device_type=0&last_deviceid=DA932FFFFE8816E7&data_json={data_json}'
+        data = f'userid={userid}&last_sync_data_time=1597306380&device_type=0&last_deviceid=02%3A00%3A00%3A00%3A00%3A00&data_json={data_json}'
 
         response = requests.post(url, data=data, headers=head).json()
         # print(response)
