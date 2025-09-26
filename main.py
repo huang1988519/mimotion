@@ -278,8 +278,12 @@ class MiMotionRunner:
 
         finddate = re.compile(r".*?date%22%3A%22(.*?)%22%2C%22data.*?")
         findstep = re.compile(r".*?ttl%5C%22%3A(.*?)%2C%5C%22dis.*?")
+        finddevice = re.compile(r".*?did%22%3A%22(.*?)%22.*?")
+        
         data_json = re.sub(finddate.findall(data_json)[0], today, str(data_json))
         data_json = re.sub(findstep.findall(data_json)[0], step, str(data_json))
+        # 更新设备ID为与登录时一致的格式
+        data_json = re.sub(finddevice.findall(data_json)[0], "02%3A00%3A00%3A00%3A00%3A00", str(data_json))
 
         url = f'https://api-mifit-cn.huami.com/v1/data/band_data.json?&t={t}'
         head = {
@@ -293,10 +297,24 @@ class MiMotionRunner:
             "X-Forwarded-For": self.fake_ip_addr
         }
 
-        data = f'userid={userid}&last_sync_data_time=1597306380&device_type=0&last_deviceid=02%3A00%3A00%3A00%3A00%3A00&data_json={data_json}'
+        # 使用当前时间戳作为同步时间
+        current_timestamp = int(time.time())
+        data = f'userid={userid}&last_sync_data_time={current_timestamp}&device_type=0&last_deviceid=02%3A00%3A00%3A00%3A00%3A00&data_json={data_json}'
 
+        # 添加调试日志
+        self.log_str += f"提交步数数据，URL: {url}\n"
+        self.log_str += f"设备ID: 02%3A00%3A00%3A00%3A00%3A00\n"
+        self.log_str += f"时间戳: {current_timestamp}\n"
+        
         response = requests.post(url, data=data, headers=head).json()
         # print(response)
+        
+        # 记录响应信息
+        if 'message' in response:
+            self.log_str += f"服务器响应: {response['message']}\n"
+        else:
+            self.log_str += f"服务器响应: {response}\n"
+            
         return f"修改步数（{step}）[" + response['message'] + "]", True
 
 
