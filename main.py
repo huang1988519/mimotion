@@ -174,34 +174,41 @@ class MiMotionRunner:
         # print(code)
 
         url2 = "https://account.huami.com/v2/client/login"
+        
+        # 更新url2的请求头
+        url2_headers = login_headers.copy()
+        url2_headers.update({
+            "accept-language": "zh-CN,zh;q=0.9",
+            "x-request-id": str(uuid.uuid4())
+        })
+        
         if self.is_phone:
             data2 = {
-                "app_name": "com.xiaomi.hm.health",
-                "app_version": "4.6.0",
+                "allow_registration": "false",
+                "app_name": "com.huami.webapp",
+                "app_version": "4.3.0",
                 "code": f"{code}",
                 "country_code": "CN",
-                "device_id": "2C8B4939-0CCD-4E94-8CBA-CB8EA6E613A1",
-                "device_model": "phone",
+                "device_id": "02%3A00%3A00%3A00%3A00%3A00",
+                "device_model": "web",
+                "dn": "account.huami.com%2Capi-user.huami.com%2Cauth.huami.com%2Capi-mifit.huami.com%2Capi-open.huami.com",
                 "grant_type": "access_token",
                 "third_name": "huami_phone",
             }
         else:
             data2 = {
-                "allow_registration=": "false",
-                "app_name": "com.xiaomi.hm.health",
-                "app_version": "6.3.5",
+                "allow_registration": "false",
+                "app_name": "com.huami.webapp",
+                "app_version": "4.3.0",
                 "code": f"{code}",
                 "country_code": "CN",
-                "device_id": "2C8B4939-0CCD-4E94-8CBA-CB8EA6E613A1",
-                "device_model": "phone",
-                "dn": "api-user.huami.com%2Capi-mifit.huami.com%2Capp-analytics.huami.com",
+                "device_id": "02%3A00%3A00%3A00%3A00%3A00",
+                "device_model": "web",
+                "dn": "account.huami.com%2Capi-user.huami.com%2Cauth.huami.com%2Capi-mifit.huami.com%2Capi-open.huami.com",
                 "grant_type": "access_token",
-                "lang": "zh_CN",
-                "os_version": "1.5.0",
-                "source": "com.xiaomi.hm.health",
                 "third_name": "email",
             }
-        r2 = requests.post(url2, data=data2, headers=login_headers).json()
+        r2 = requests.post(url2, data=data2, headers=url2_headers).json()
         login_token = r2["token_info"]["login_token"]
         # print("login_token获取成功！")
         # print(login_token)
