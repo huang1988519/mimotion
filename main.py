@@ -174,7 +174,9 @@ class MiMotionRunner:
             try:
                 response_json = r1.json()
                 # 检查响应中是否包含access_token或code
-                if 'access_token' in response_json:
+                if 'access' in response_json:
+                    code = response_json['access']
+                elif 'access_token' in response_json:
                     code = response_json['access_token']
                 elif 'code' in response_json:
                     code = response_json['code']
