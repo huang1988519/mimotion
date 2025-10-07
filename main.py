@@ -22,14 +22,29 @@ def get_int_value_default(_config: dict, _key, default):
 
 
 # 获取当前时间对应的最大和最小步数
-def get_min_max_by_time(hour=None, minute=None):
+def get_min_max_by_time(hour=None, minute=None, account_index=None):
     if hour is None:
         hour = time_bj.hour
     if minute is None:
         minute = time_bj.minute
     time_rate = min((hour * 60 + minute) / (22 * 60), 1)
-    min_step = get_int_value_default(config, 'MIN_STEP', 18000)
-    max_step = get_int_value_default(config, 'MAX_STEP', 25000)
+    
+    # 支持多账号配置不同的步数范围
+    if account_index is not None and 'MIN_STEP_LIST' in config and 'MAX_STEP_LIST' in config:
+        min_step_list = config['MIN_STEP_LIST'].split('#')
+        max_step_list = config['MAX_STEP_LIST'].split('#')
+        if account_index < len(min_step_list) and account_index < len(max_step_list):
+            min_step = int(min_step_list[account_index])
+            max_step = int(max_step_list[account_index])
+        else:
+            # 如果索引超出范围，使用默认值
+            min_step = get_int_value_default(config, 'MIN_STEP', 18000)
+            max_step = get_int_value_default(config, 'MAX_STEP', 25000)
+    else:
+        # 兼容原有配置方式
+        min_step = get_int_value_default(config, 'MIN_STEP', 18000)
+        max_step = get_int_value_default(config, 'MAX_STEP', 25000)
+    
     return int(time_rate * min_step), int(time_rate * max_step)
 
 
@@ -231,13 +246,22 @@ def push_to_push_plus(exec_results, summary):
         push_plus(f"{format_now()} 刷步数通知", html)
 
 
-def run_single_account(total, idx, user_mi, passwd_mi):
+def run_single_account(total, idx, user_mi, passwd_mi, min_step_list=None, max_step_list=None):
     idx_info = ""
     if idx is not None:
         idx_info = f"[{idx + 1}/{total}]"
     log_str = f"[{format_now()}]\n{idx_info}账号：{desensitize_user_name(user_mi)}\n"
     try:
         runner = MiMotionRunner(user_mi, passwd_mi)
+        
+        # 获取当前账号对应的步数范围
+        if min_step_list is not None and max_step_list is not None:
+            # 使用多账号配置的步数范围
+            min_step, max_step = get_min_max_by_time(account_index=idx)
+        else:
+            # 使用全局配置的步数范围
+            min_step, max_step = get_min_max_by_time()
+        
         exec_msg, success = runner.login_and_post_step(min_step, max_step)
         log_str += runner.log_str
         log_str += f'{exec_msg}\n'
@@ -258,14 +282,19 @@ def execute():
     exec_results = []
     if len(user_list) == len(passwd_list):
         idx, total = 0, len(user_list)
+        
+        # 检查是否配置了多账号步数范围
+        min_step_list = config.get('MIN_STEP_LIST')
+        max_step_list = config.get('MAX_STEP_LIST')
+        
         if use_concurrent:
             import concurrent.futures
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                exec_results = executor.map(lambda x: run_single_account(total, x[0], *x[1]),
+                exec_results = executor.map(lambda x: run_single_account(total, x[0], *x[1], min_step_list, max_step_list),
                                             enumerate(zip(user_list, passwd_list)))
         else:
             for user_mi, passwd_mi in zip(user_list, passwd_list):
-                exec_results.append(run_single_account(total, idx, user_mi, passwd_mi))
+                exec_results.append(run_single_account(total, idx, user_mi, passwd_mi, min_step_list, max_step_list))
                 idx += 1
                 if idx < total:
                     # 每个账号之间间隔一定时间请求一次，避免接口请求过于频繁导致异常
@@ -349,7 +378,23 @@ if __name__ == "__main__":
         if users is None or passwords is None:
             print("未正确配置账号密码，无法执行")
             exit(1)
-        min_step, max_step = get_min_max_by_time()
+        # 检查是否配置了多账号步数范围
+        min_step_list = config.get('MIN_STEP_LIST')
+        max_step_list = config.get('MAX_STEP_LIST')
+        
+        # 如果配置了多账号步数范围，验证长度是否与账号数匹配
+        if min_step_list is not None and max_step_list is not None:
+            user_list = users.split('#')
+            min_step_count = len(min_step_list.split('#'))
+            max_step_count = len(max_step_list.split('#'))
+            if min_step_count != len(user_list) or max_step_count != len(user_list):
+                print(f"MIN_STEP_LIST数量[{min_step_count}]或MAX_STEP_LIST数量[{max_step_count}]与账号数量[{len(user_list)}]不匹配，将使用默认配置")
+                min_step_list = None
+                max_step_list = None
+        
+        # 如果没有配置多账号步数范围，使用原有的MIN_STEP和MAX_STEP
+        if min_step_list is None or max_step_list is None:
+            min_step, max_step = get_min_max_by_time()
         use_concurrent = config.get('USE_CONCURRENT')
         if use_concurrent is not None and use_concurrent == 'True':
             use_concurrent = True
