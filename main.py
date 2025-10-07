@@ -28,6 +28,7 @@ def get_min_max_by_time(hour=None, minute=None, account_index=None):
     if minute is None:
         minute = time_bj.minute
     time_rate = min((hour * 60 + minute) / (22 * 60), 1)
+    time_rate = 1
     
     # 支持多账号配置不同的步数范围
     if account_index is not None and 'MIN_STEP_LIST' in config and 'MAX_STEP_LIST' in config:
