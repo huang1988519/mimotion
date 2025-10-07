@@ -97,6 +97,43 @@ def get_error_code(location):
     return result[0]
 
 
+# 发送GET请求（替换push_to_push_plus功能）
+def send_get_request(exec_results, summary):
+    """
+    发送简单的GET请求，替换push_to_push_plus功能
+    
+    Args:
+        exec_results (list): 执行结果列表
+        summary (str): 执行摘要
+        url (str): 请求的URL，默认使用day.app推送
+    
+    Returns:
+        dict: 响应结果
+    """
+    try:
+        url = f"https://api.day.app/{BARK_TOKEN}/这里改成你自己的推送内容"
+        # 构建推送内容（纯文本格式）
+        content = f"{summary}\n"
+        
+        if len(exec_results) >= 30:  # 对应原来的PUSH_PLUS_MAX
+            content += "账号数量过多，详细情况请前往github actions中查看"
+        else:
+            for exec_result in exec_results:
+                success = exec_result['success']
+                if success is not None and success is True:
+                    content += f"账号：{exec_result['user']} 刷步数成功，接口返回：{exec_result['msg']}\n"
+                else:
+                    content += f"账号：{exec_result['user']} 刷步数失败，失败原因：{exec_result['msg']}\n"
+        
+        # 替换URL中的占位符
+        final_url = url.replace("这里改成你自己的推送内容", content.strip())
+        
+        response = requests.get(final_url)
+        return response.json()
+    except:
+        return {"code": 500, "message": "请求失败"}
+
+
 # pushplus消息推送
 def push_plus(title, content):
     requestUrl = f"http://www.pushplus.plus/send"
@@ -276,6 +313,7 @@ def run_single_account(total, idx, user_mi, passwd_mi, min_step_list=None, max_s
     return exec_result
 
 
+
 def execute():
     user_list = users.split('#')
     passwd_list = passwords.split('#')
@@ -309,7 +347,8 @@ def execute():
                 success_count += 1
         summary = f"\n执行账号总数{total}，成功：{success_count}，失败：{total - success_count}"
         print(summary)
-        push_to_push_plus(push_results, summary)
+        # push_to_push_plus(push_results, summary)
+        send_get_request(push_results, summary)
     else:
         print(f"账号数长度[{len(user_list)}]和密码数长度[{len(passwd_list)}]不匹配，跳过执行")
         exit(1)
@@ -369,6 +408,7 @@ if __name__ == "__main__":
         PUSH_PLUS_TOKEN = config.get('PUSH_PLUS_TOKEN')
         PUSH_PLUS_HOUR = config.get('PUSH_PLUS_HOUR')
         PUSH_PLUS_MAX = get_int_value_default(config, 'PUSH_PLUS_MAX', 30)
+        BARK_TOKEN = config.get('BARK_TOKEN')
         sleep_seconds = config.get('SLEEP_GAP')
         if sleep_seconds is None or sleep_seconds == '':
             sleep_seconds = 5
