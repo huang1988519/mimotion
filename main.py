@@ -296,15 +296,18 @@ if __name__ == "__main__":
             print("CONFIG格式不正确，请检查Secret配置，请严格按照JSON格式：使用双引号包裹字段和值，逗号不能多也不能少")
             traceback.print_exc()
             exit(1)
+        
         # 创建推送配置对象
         push_config = push_util.PushConfig(
             push_plus_token=config.get('PUSH_PLUS_TOKEN'),
             push_plus_hour=config.get('PUSH_PLUS_HOUR'),
             push_plus_max=get_int_value_default(config, 'PUSH_PLUS_MAX', 30),
-            push_wechat_webhook_key=config.get('PUSH_WECHAT_WEBHOOK_KEY', os.environ.get("PUSH_WECHAT_WEBHOOK_KEY")),
+            push_wechat_webhook_key=config.get('PUSH_WECHAT_WEBHOOK_KEY', os.getenv("PUSH_WECHAT_WEBHOOK_KEY")),
             telegram_bot_token=config.get('TELEGRAM_BOT_TOKEN'),
             telegram_chat_id=config.get('TELEGRAM_CHAT_ID')
         )
+        print(config)
+        print(push_config)
         sleep_seconds = config.get('SLEEP_GAP')
         if sleep_seconds is None or sleep_seconds == '':
             sleep_seconds = 5
