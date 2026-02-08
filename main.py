@@ -292,6 +292,7 @@ if __name__ == "__main__":
         config = dict()
         try:
             config = dict(json.loads(os.environ.get("CONFIG")))
+            print(os.environ.get("CONFIG"))
         except:
             print("CONFIG格式不正确，请检查Secret配置，请严格按照JSON格式：使用双引号包裹字段和值，逗号不能多也不能少")
             traceback.print_exc()
@@ -307,7 +308,7 @@ if __name__ == "__main__":
             telegram_chat_id=config.get('TELEGRAM_CHAT_ID')
         )
         print(json.dumps(config,indent=2))
-        print(push_config)
+        print(os.getenv("PUSH_WECHAT_WEBHOOK_KEY"))
         sleep_seconds = config.get('SLEEP_GAP')
         if sleep_seconds is None or sleep_seconds == '':
             sleep_seconds = 5
