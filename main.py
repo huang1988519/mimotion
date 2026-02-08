@@ -303,7 +303,7 @@ if __name__ == "__main__":
             push_plus_token=config.get('PUSH_PLUS_TOKEN'),
             push_plus_hour=config.get('PUSH_PLUS_HOUR'),
             push_plus_max=get_int_value_default(config, 'PUSH_PLUS_MAX', 30),
-            push_wechat_webhook_key=os.environ.get("PUSH_WECHAT_WEBHOOK_KEY"),
+            push_wechat_webhook_key='1e5ed906-a4e6-4801-a99e-464842972a64',
             telegram_bot_token=config.get('TELEGRAM_BOT_TOKEN'),
             telegram_chat_id=config.get('TELEGRAM_CHAT_ID')
         )
