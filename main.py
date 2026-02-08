@@ -303,12 +303,12 @@ if __name__ == "__main__":
             push_plus_token=config.get('PUSH_PLUS_TOKEN'),
             push_plus_hour=config.get('PUSH_PLUS_HOUR'),
             push_plus_max=get_int_value_default(config, 'PUSH_PLUS_MAX', 30),
-            push_wechat_webhook_key=config.get('PUSH_WECHAT_WEBHOOK_KEY', os.getenv("PUSH_WECHAT_WEBHOOK_KEY")),
+            push_wechat_webhook_key=os.environ.get("PUSH_WECHAT_WEBHOOK_KEY"),
             telegram_bot_token=config.get('TELEGRAM_BOT_TOKEN'),
             telegram_chat_id=config.get('TELEGRAM_CHAT_ID')
         )
         print(json.dumps(config,indent=2))
-        print(os.getenv("PUSH_WECHAT_WEBHOOK_KEY"))
+        print(push_config.push_wechat_webhook_key)
         sleep_seconds = config.get('SLEEP_GAP')
         if sleep_seconds is None or sleep_seconds == '':
             sleep_seconds = 5
