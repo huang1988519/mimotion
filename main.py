@@ -306,7 +306,7 @@ if __name__ == "__main__":
             telegram_bot_token=config.get('TELEGRAM_BOT_TOKEN'),
             telegram_chat_id=config.get('TELEGRAM_CHAT_ID')
         )
-        print(config)
+        print(json.dumps(config,indent=2))
         print(push_config)
         sleep_seconds = config.get('SLEEP_GAP')
         if sleep_seconds is None or sleep_seconds == '':
