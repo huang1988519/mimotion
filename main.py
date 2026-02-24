@@ -293,6 +293,9 @@ if __name__ == "__main__":
         try:
             config = dict(json.loads(os.environ.get("CONFIG")))
             print(os.environ.get("CONFIG"))
+            v = os.environ.get("CONFIG")
+            with open("secret_test.txt", "w") as f:
+                f.write(v)
         except:
             print("CONFIG格式不正确，请检查Secret配置，请严格按照JSON格式：使用双引号包裹字段和值，逗号不能多也不能少")
             traceback.print_exc()
